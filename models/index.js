@@ -23,7 +23,7 @@ db.postings = require('./posting.model')(sequelize, Sequelize);
 
 db.users.hasMany(db.postings, {as: "postings"});
 db.postings.belongsTo(db.users, {
-    foreignKey: 'sellerId',
+    foreignKey: 'userId',
     as: 'seller'
 })
 

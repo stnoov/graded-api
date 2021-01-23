@@ -17,6 +17,13 @@ app.use(bodyParser.json());
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const db = require("./models");
+require('./routes/auth.routes')(app);
+
+db.sequelize.sync({force: true}).then(() => {
+    console.log('Drop and Resync Db');
+});
+
 // simple route
 app.get("/", (req, res) => {
     res.json({ message: "Testing API." });
