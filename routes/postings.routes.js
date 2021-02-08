@@ -9,4 +9,8 @@ module.exports = function (app) {
         "/api/postings/delete_posting",
         controller.delete_posting
     )
+    app.post(
+        "/api/postings/edit_posting",
+        controller.edit_posting
+    )
 }
