@@ -75,3 +75,10 @@ exports.edit_posting = (req, res) => {
         })
     })
 }
+
+exports.get_postings = (req, res) => {
+    Posting.findAll({attributes: ['title', 'price', 'location'], include: [{model: User, as: "seller", attributes: ['name', 'email']}]})
+        .then(postings => {
+            res.send({message: postings})
+        })
+}

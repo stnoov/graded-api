@@ -13,4 +13,8 @@ module.exports = function (app) {
         "/api/postings/edit_posting",
         controller.edit_posting
     )
+    app.get(
+        "/api/postings/get_postings",
+        controller.get_postings
+    )
 }
