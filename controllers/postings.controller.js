@@ -23,5 +23,24 @@ exports.add_posting = (req, res) => {
             res.status(500).send({message: err.message});
         });
     })
+}
 
+exports.delete_posting = (req, res) => {
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    }).then(user => {
+        Posting.findOne({
+            where: {
+                id: req.body.id
+            }
+        }).then(post => {
+            if (post.userId === user.id) {
+                post.destroy()
+                res.send({message: "Your posting was deleted"})
+            }
+            }
+        )
+    })
 }
