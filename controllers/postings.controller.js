@@ -1,13 +1,24 @@
 const db = require("../models");
+const config = require("../config/auth.config.js");
+const jwt = require("jsonwebtoken");
 const User = db.users;
 const Posting = db.postings;
 
+
 exports.add_posting = (req, res) => {
-    User.findOne({
-        where: {
-            email: req.body.email
+    if (!req.body.token) {
+        return res.status(403).send({
+            message: "No token provided!"
+        });
+    }
+
+    jwt.verify(req.body.token, config.secret, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({
+                message: "Unauthorized!"
+            });
         }
-    }).then(user => {
+        req.userId = decoded.id;
         Posting.create({
             title: req.body.title,
             description: req.body.description,
@@ -16,14 +27,37 @@ exports.add_posting = (req, res) => {
             images: req.body.images,
             price: req.body.price,
             delivery_type: req.body.delivery_type,
-            userId: user.id
+            userId: decoded.id
         }).then(
             res.send({message: "Posting was created"})
         ).catch(err => {
             res.status(500).send({message: err.message});
         });
-    })
+    });
 }
+
+// exports.add_posting = (req, res) => {
+//     User.findOne({
+//         where: {
+//             email: req.body.email
+//         }
+//     }).then(user => {
+//         Posting.create({
+//             title: req.body.title,
+//             description: req.body.description,
+//             category: req.body.category,
+//             location: req.body.location,
+//             images: req.body.images,
+//             price: req.body.price,
+//             delivery_type: req.body.delivery_type,
+//             userId: user.id
+//         }).then(
+//             res.send({message: "Posting was created"})
+//         ).catch(err => {
+//             res.status(500).send({message: err.message});
+//         });
+//     })
+// }
 
 exports.delete_posting = (req, res) => {
     User.findOne({
@@ -77,7 +111,7 @@ exports.edit_posting = (req, res) => {
 }
 
 exports.get_postings = (req, res) => {
-    Posting.findAll({attributes: ['title', 'price', 'location'], include: [{model: User, as: "seller", attributes: ['name', 'email']}]})
+    Posting.findAll({attributes: ['title', 'description', 'price', 'location'], include: [{model: User, as: "seller", attributes: ['name', 'email']}]})
         .then(postings => {
             res.send({message: postings})
         })
