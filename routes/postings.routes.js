@@ -18,6 +18,10 @@ module.exports = function (app) {
         controller.get_sorted_postings
     )
     app.get(
+        "/api/postings/get_users_postings",
+        controller.get_users_postings
+    )
+    app.get(
         "/api/postings/get_postings",
         controller.get_postings
     )

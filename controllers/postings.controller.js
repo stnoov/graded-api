@@ -1,14 +1,13 @@
 const db = require("../models");
 const config = require("../config/auth.config.js");
 const jwt = require("jsonwebtoken");
-const { cloudinary } = require('../middleware/cloudinary')
+const {cloudinary} = require('../middleware/cloudinary')
 const User = db.users;
 const Posting = db.postings;
 
 
 exports.add_posting = async (req, res) => {
     let token = req.headers["x-access-token"]
-    console.log(token)
     jwt.verify(token, config.secret, (err, decoded) => {
         if (err) {
             return res.status(401).send({
@@ -20,7 +19,7 @@ exports.add_posting = async (req, res) => {
     const imageToUpload = req.body.images
     try {
         const uploadedResponse = await cloudinary.uploader.upload("data:image/png;base64," + imageToUpload, {
-                upload_preset: 'dev_setups'
+            upload_preset: 'dev_setups'
         });
         Posting.create({
             title: req.body.title,
@@ -62,25 +61,28 @@ exports.add_posting = async (req, res) => {
 // }
 
 exports.delete_posting = (req, res) => {
-    User.findOne({
-        where: {
-            email: req.body.email
+    let token = req.headers["x-access-token"]
+    jwt.verify(token, config.secret, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({
+                message: "Unauthorized!"
+            });
         }
-    }).then(user => {
-        Posting.findOne({
-            where: {
-                id: req.body.id
-            }
-        }).then(post => {
-            if (post.userId === user.id) {
+        req.userId = decoded.id;
+    });
+    Posting.findOne({
+        where: {
+            id: req.body.id
+        }
+    }).then(post => {
+            if (post.userId === req.userId) {
                 post.destroy()
                 res.send({message: "Your posting was deleted"})
             } else {
                 res.send({message: "You do not have permissions to delete this posting"})
             }
-            }
-        )
-    })
+        }
+)
 }
 
 exports.edit_posting = (req, res) => {
@@ -119,9 +121,29 @@ exports.get_postings = (req, res) => {
         })
 }
 
+exports.get_users_postings = (req, res) => {
+    let token = req.headers["x-access-token"]
+    jwt.verify(token, config.secret, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({
+                message: "Unauthorized!"
+            });
+        }
+        req.userId = decoded.id;
+    });
+    Posting.findAll({
+        include: [{model: User, as: "seller", attributes: ['name', 'email']}],
+        where: {userId: req.userId}
+    })
+        .then(postings => {
+            res.send({message: postings})
+        })
+}
+
+
 exports.get_sorted_postings = (req, res) => {
     let whereStatement = {}
-    if(req.body.location === 'Finland' && req.body.category === 'All') {
+    if (req.body.location === 'Finland' && req.body.category === 'All') {
         whereStatement = {}
     } else if (req.body.location !== 'Finland' && req.body.category === 'All') {
         whereStatement = {
