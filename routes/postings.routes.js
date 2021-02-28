@@ -13,6 +13,10 @@ module.exports = function (app) {
         "/api/postings/edit_posting",
         controller.edit_posting
     )
+    app.post(
+        "/api/postings/get_sorted_postings",
+        controller.get_sorted_postings
+    )
     app.get(
         "/api/postings/get_postings",
         controller.get_postings

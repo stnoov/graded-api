@@ -48,10 +48,10 @@ exports.signin = (req, res) => {
 
                 res.status(200).send({
                     id: user.id,
-                    username: user.username,
+                    name: user.name,
                     email: user.email,
                     accessToken: token
-            });
+            }); 
         })
         .catch(err => {
             res.status(500).send({message: err.message});

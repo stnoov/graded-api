@@ -1,39 +1,41 @@
 const db = require("../models");
 const config = require("../config/auth.config.js");
 const jwt = require("jsonwebtoken");
+const { cloudinary } = require('../middleware/cloudinary')
 const User = db.users;
 const Posting = db.postings;
 
 
-exports.add_posting = (req, res) => {
-    if (!req.body.token) {
-        return res.status(403).send({
-            message: "No token provided!"
-        });
-    }
-
-    jwt.verify(req.body.token, config.secret, (err, decoded) => {
+exports.add_posting = async (req, res) => {
+    let token = req.headers["x-access-token"]
+    console.log(token)
+    jwt.verify(token, config.secret, (err, decoded) => {
         if (err) {
             return res.status(401).send({
                 message: "Unauthorized!"
             });
         }
         req.userId = decoded.id;
+    });
+    const imageToUpload = req.body.images
+    try {
+        const uploadedResponse = await cloudinary.uploader.upload("data:image/png;base64," + imageToUpload, {
+                upload_preset: 'dev_setups'
+        });
         Posting.create({
             title: req.body.title,
             description: req.body.description,
             category: req.body.category,
             location: req.body.location,
-            images: req.body.images,
+            images: uploadedResponse.url,
             price: req.body.price,
             delivery_type: req.body.delivery_type,
-            userId: decoded.id
-        }).then(
-            res.send({message: "Posting was created"})
-        ).catch(err => {
-            res.status(500).send({message: err.message});
-        });
-    });
+            userId: req.userId
+        }).catch((e) => console.log(e))
+    } catch (error) {
+        console.log(error)
+    }
+
 }
 
 // exports.add_posting = (req, res) => {
@@ -102,7 +104,7 @@ exports.edit_posting = (req, res) => {
                     price: req.body.price,
                     delivery_type: req.body.delivery_type
                 })
-                res.send({message: "Your posting was update"})
+                res.send({message: "Your posting was updated"})
             } else {
                 res.send({message: "You do not have permissions to edit this posting"})
             }
@@ -111,8 +113,33 @@ exports.edit_posting = (req, res) => {
 }
 
 exports.get_postings = (req, res) => {
-    Posting.findAll({attributes: ['title', 'description', 'price', 'location'], include: [{model: User, as: "seller", attributes: ['name', 'email']}]})
+    Posting.findAll({include: [{model: User, as: "seller", attributes: ['name', 'email']}]})
         .then(postings => {
             res.send({message: postings})
         })
+}
+
+exports.get_sorted_postings = (req, res) => {
+    let whereStatement = {}
+    if(req.body.location === 'Finland' && req.body.category === 'All') {
+        whereStatement = {}
+    } else if (req.body.location !== 'Finland' && req.body.category === 'All') {
+        whereStatement = {
+            location: req.body.location
+        }
+    } else if (req.body.location === 'Finland' && req.body.category !== 'All') {
+        whereStatement = {
+            category: req.body.category
+        }
+    } else if (req.body.location !== 'Finland' && req.body.category !== 'All') {
+        whereStatement = {
+            location: req.body.location,
+            category: req.body.category
+        }
+    }
+    Posting.findAll({include: [{model: User, as: "seller", attributes: ['name', 'email']}], where: whereStatement})
+        .then(postings => {
+            res.send({message: postings})
+        })
+    console.log(req.body)
 }
