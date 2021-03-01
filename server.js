@@ -18,9 +18,7 @@ const db = require("./models");
 require('./routes/auth.routes')(app);
 require('./routes/postings.routes')(app);
 
-db.sequelize.sync({force: true}).then(() => {
-    console.log('Drop and Resync Db');
-});
+db.sequelize.sync()
 
 // simple route
 app.get("/", (req, res) => {
