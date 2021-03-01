@@ -79,7 +79,7 @@ exports.edit_posting = async (req, res) => {
         });
         Posting.findOne({
             where: {
-                id: req.userId
+                id: req.body.id
             }
         }).then(post => {
             if (post.userId === req.userId) {
