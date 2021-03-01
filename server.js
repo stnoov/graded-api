@@ -9,11 +9,8 @@ var corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// parse requests of content-type - application/json
-app.use(bodyParser.json());
-
-// parse requests of content-type - application/x-www-form-urlencoded
+app.use(bodyParser.json(({limit: '50mb'})));
+app.use(express.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 
